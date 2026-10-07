@@ -130,6 +130,7 @@ jobs:
           helm upgrade kantyna app/deploy/helm/kantyna \
             --namespace "$K8S_NAMESPACE" \
             --reuse-values \
+            --set prometheusRule.enabled=true \
             --set "global.imageRegistry=$ECR_REGISTRY" \
             --set "global.imageTag=$IMAGE_TAG"
       - name: rollout status

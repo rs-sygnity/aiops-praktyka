@@ -276,4 +276,4 @@ prometheusRule:
   enabled: false
   labels:
     release: kube-prometheus-stack
-  runbookBaseUrl: https://github.com/aiops-szkolenie/kantyna/blob/main/runbooks
+  runbookBaseUrl: https://github.com/rs-sygnity/aiops-praktyka/blob/main/app/runbooks
