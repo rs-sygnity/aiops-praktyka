@@ -67,7 +67,20 @@ Zmiana (`git diff` pokazany i zaakceptowany przed commitem):
 
 ## 5. Weryfikacja
 
-_Jeszcze niezrobione._ Cel: `setup/check.sh` → 11/11 i metryki stabilne przez 5 min.
+Pomiar o 16:03 (okno ostatnich 12 min, krok 1 min), namespace `robert`:
+
+| Sprawdzenie | Zapytanie / komenda | Wynik |
+|---|---|---|
+| `check.sh` | `setup/check.sh` | **SUKCES: 11/11** |
+| Odsetek 5xx orders-api | `100 * (sum(rate(http_requests_total{…status=~"5.."}[2m])) or vector(0)) / sum(rate(http_requests_total{…}[2m]))` | 61% do ok. 15:53, 15% o 15:54, **0% od ok. 15:55 do 16:03 (ok. 8 min)** |
+| Zajętość puli DB | `max(db_pool_connections_in_use) / max(db_pool_size)` | 100% do 15:53, **0% od 15:54 do 16:03** |
+| p95 `/api/menu` i `/api/orders` | `histogram_quantile(0.95, …[2m])` | **ok. 0,022 s** stabilnie od 15:54 (w trakcie incydentu ≥10 s) |
+| Pody orders-api | `kubectl -n robert get pods` | 2/2 `Running`, `1/1 Ready` |
+
+Uwagi:
+- Okno stabilności obejmuje także deploy pipeline'u z 16:00 (rewizja Helm 6), po nim metryki dalej bez błędów.
+- Brak danych sprzed incydentu do porównania liczbowego z „poziomem sprzed” (zapytanie dla 14:33–15:08 puste); za kryterium przyjąłem progi z dashboardu: 5xx < 5%, p95 < 1 s.
+- Wpływ `slow_menu_query` na latencję: nie da się już zmierzyć, bo flaga jest wyłączona od 15:51. P95 ≈ 22 ms to stan bez niej.
 
 ## 6. Post-mortem
 
