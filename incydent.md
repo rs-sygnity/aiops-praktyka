@@ -54,7 +54,16 @@ Usługa przywrócona ok. 15:53 (czas trwania incydentu od ok. 15:25: ok. 28 min)
 
 ### 4.2 Naprawa commitem
 
-_Jeszcze niezrobione._ SHA commita i link do przebiegu: _brak_
+Ustalenie: w repo nie było błędu (repo i release Helm miały `db_pool_leak: false`, `slow_menu_query: false`). Przyczyną był ręczny `kubectl patch` flag o 15:10, poza repo, a awaria nie wywołała alertu, bo `prometheusRule.enabled: false` (jawnie zapisane w wartościach release'u, więc zmiana domyślnej wartości w `values.yaml` przy `--reuse-values` nic by nie dała). Commit nie usuwa przyczyny (ją zamknęła mitygacja 4.1), tylko sprawia, że podobna awaria zostanie wykryta alertem.
+
+Zmiana (`git diff` pokazany i zaakceptowany przed commitem):
+- `.github/workflows/ci.yml`: `helm upgrade … --set prometheusRule.enabled=true`
+- `app/deploy/helm/kantyna/values.yaml`: `runbookBaseUrl` → `https://github.com/rs-sygnity/aiops-praktyka/blob/main/app/runbooks` (poprzedni adres wskazywał na nieistniejące repo)
+
+- Commit: `248a4a3` (`ci: włącz PrometheusRule przy deployu i popraw runbookBaseUrl (lab07)`)
+- Przebieg pipeline'u: https://github.com/rs-sygnity/aiops-praktyka/actions/runs/37632964919 (**zielony**, w tym „Wdrożenie (helm)”)
+- Efekt na klastrze (16:01): `helm history` rev. 6 `deployed` (14:00:45 UTC); PrometheusRule `kantyna` istnieje z 7 alertami, w tym `KantynaDBPoolExhausted`; flagi nadal `false`/`false`; pody orders-api `1/1`; `setup/check.sh` → 11/11.
+- Bez `--force-conflicts`, konfliktu z `kubectl-patch` nie było (wartości flag w repo i klastrze są identyczne).
 
 ## 5. Weryfikacja
 
