@@ -1,0 +1,5 @@
+# Dziennik — lab03
+
+| # | Objaw (krok, komunikat) | Hipoteza (AI / ja) | Jak sprawdziłem | Poprawka | Status |
+|---|---|---|---|---|---|
+| 1 | Job `deploy`, krok „Smoke test /healthz”: `curl: (28) Failed to connect to kantyna-orders-api port 8000 after ~136000 ms: Could not connect to server`; przebieg wisiał 17 min i zakończył się `failure`. Rollout i `helm upgrade` przeszły. | AI: pod smoke jest blokowany przez `NetworkPolicy` w namespace (timeout, a nie odmowa połączenia lub błąd DNS). | `kubectl get svc,endpoints,pods,networkpolicy -n robert` (Service ma 2 endpointy, pody `1/1 Running`) oraz `kubectl describe networkpolicy kantyna-orders-api-ingress -n robert`: pozostałość po labie 02 (etykieta `aiops/lab=lab02`) wpuszcza na port 8000 tylko pody z `app.kubernetes.io/name=web`, a pod smoke miał tylko etykietę `run=…`. | W `.github/workflows/ci.yml` dodana flaga `--labels=app.kubernetes.io/name=web` do `kubectl run` (commit `b41b69b`). Polityka w klastrze bez zmian. | ✅ przebieg `37455178933` zielony, `setup/check.sh` → 11/11 |
